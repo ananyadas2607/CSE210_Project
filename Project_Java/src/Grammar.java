@@ -26,7 +26,7 @@ public class Grammar {
         this.rules = new ArrayList<>();
         while (reader.hasNextLine()) {
             String line = reader.nextLine();
-            Rule rule = new Rule(line.split("→")[0], Arrays.asList(line.split("→")[1].split("")));
+            Rule rule = new Rule(line.split("→")[0], Arrays.asList(line.split("→")[1].split("")), rules.size());
             this.rules.add(rule);
         }
         reader.close();
