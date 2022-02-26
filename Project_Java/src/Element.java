@@ -6,4 +6,8 @@ public class Element extends ParserTree {
         this.start = start;
         this.end = start + 1;
     }
+
+    void print(StringBuilder string, String prefix, String continuation) {
+        string.append(prefix).append(symbol).append("\n");
+    }
 }

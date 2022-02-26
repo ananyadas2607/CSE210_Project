@@ -47,6 +47,9 @@ public class Main {
                 System.out.println("Sentence " + (counter) + ": Not valid");
             } else {
                 System.out.println("Sentence " + (counter) + ": Valid");
+                StringBuilder string = new StringBuilder();
+                tree.print(string, "", "");
+                System.out.println(string);
             }
             counter++;
         }
