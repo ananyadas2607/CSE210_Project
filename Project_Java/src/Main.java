@@ -6,9 +6,9 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
         //String inputURL = args[0];
-        String inputURL = "/Users/ananya/Documents/GitHub/CSE210_Project/Grammars/Grammar_1.txt";
+        String inputURL = "/Users/Daniel Paul/Documents/GitHub/CSE210_Project/Grammars/Grammar_1.txt";
 
-        String sentenceURL="/Users/ananya/Documents/GitHub/CSE210_Project/Grammars/Sentences/Grammar_1.txt";
+        String sentenceURL="/Users/Daniel Paul/Documents/GitHub/CSE210_Project/Grammars/Sentences/Grammar_1.txt";
 
         //Read the grammar from the file
         Grammar grammar = new Grammar(inputURL);
@@ -34,53 +34,66 @@ public class Main {
 
         //Parse sentences
         start = System.currentTimeMillis();
+        List<ParserTree> parserTrees = new ArrayList<>();
         for(String sentence:sentences){
-            parseSentence(table, sentence, grammar);
+             parserTrees.add(parseSentence(table, sentence, grammar));
         }
         end = System.currentTimeMillis();
 
         //Output parsed sentences and time elapsed
+        int counter = 1;
+        for(ParserTree tree:parserTrees) {
+            if (tree == null) {
+                System.out.println("Sentence " + (counter) + ": Not valid");
+            } else {
+                System.out.println("Sentence " + (counter) + ": Valid");
+            }
+            counter++;
+        }
         System.out.println("Time elapsed: " + (end-start)/1000.0);
-
-
-
-
-
-
-    int a=0;
-
 
     }
 
-    private static void parseSentence(List<HashMap<String, Action>> table, String sentence, Grammar grammar){
+    private static ParserTree parseSentence(List<HashMap<String, Action>> table, String sentence, Grammar grammar){
         int state = 0;
         Stack<StackElement> stack = new Stack<>();
-        stack.push(new StackElement("", 0));
+        stack.push(new StackElement("", 0, null));
         String[] input = sentence.split("");
         int counter = 0;
 
+        label:
         while(counter < input.length) {
             Action action = table.get(state).get(input[counter]);
-            if (action.type.equals("shift")) {
-                stack.push(new StackElement(input[counter], action.number));
-                counter++;
-                state=action.number;
+            if (action == null) {
+                return null;
             }
-            else if(action.type.equals("reduce")){
-                Rule rule=grammar.rules.get(action.number);
-                for(int i=0;i<rule.symbols.size();i++){
-                    stack.pop();
-                }
-                state=stack.peek().state;
-                Action action2=table.get(state).get(rule.result);
-                stack.push(new StackElement(rule.result, action2.number));
-                state=action2.number;
-            }
-            else if(action.type.equals("accept")){
+            switch (action.type) {
+                case "shift":
+                    stack.push(new StackElement(input[counter], action.number, new Element(input[counter], counter)));
+                    counter++;
+                    state = action.number;
                     break;
+                case "reduce":
+                    Rule rule = grammar.rules.get(action.number);
+                    List<ParserTree> children = new ArrayList<>();
+                    int end = stack.peek().tree.end;
+                    for (int i = 0; i < rule.symbols.size(); i++) {
+                        StackElement stackElement = stack.pop();
+                        children.add(stackElement.tree);
+                    }
+                    int start = stack.peek().tree == null ? 0 : stack.peek().tree.end;
+                    Collections.reverse(children);
+                    state = stack.peek().state;
+                    Action action2 = table.get(state).get(rule.result);
+                    Node newNode = new Node(rule.result, children, start, end);
+                    stack.push(new StackElement(rule.result, action2.number, newNode));
+                    state = action2.number;
+                    break;
+                case "accept":
+                    return stack.pop().tree;
             }
         }
-
+        return null;
     }
 
     private static List<String> readSentences(String sentenceURL) throws FileNotFoundException {
