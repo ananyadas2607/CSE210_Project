@@ -1,12 +1,15 @@
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Main {
+
     public static void main(String[] args) throws FileNotFoundException {
         //String inputURL = args[0];
         String inputURL = "/Users/ananya/Documents/GitHub/CSE210_Project/Grammars/Grammar_1.txt";
+
+        String sentenceURL="/Users/ananya/Documents/GitHub/CSE210_Project/Grammars/Sentences/Grammar_1.txt";
+
         //Read the grammar from the file
         Grammar grammar = new Grammar(inputURL);
 
@@ -19,9 +22,66 @@ public class Main {
         //Generate Table
         List<HashMap<String, Action>> table=generateTable(diagram, reducers, grammar);
 
+        //Output table and time elapsed
+
+        //Read sentences from file
+        List<String> sentences= readSentences(sentenceURL);
+
+        //Parse sentences
+        for(String sentence:sentences){
+            parseSentence(table, sentence, grammar);
+        }
+
+
+
 
     int a=0;
 
+
+    }
+
+    private static void parseSentence(List<HashMap<String, Action>> table, String sentence, Grammar grammar){
+        int state = 0;
+        Stack<StackElement> stack = new Stack<>();
+        stack.push(new StackElement("", 0));
+        String[] input = sentence.split("");
+        int counter = 0;
+
+        while(counter < input.length) {
+            Action action = table.get(state).get(input[counter]);
+            if (action.type.equals("shift")) {
+                stack.push(new StackElement(input[counter], action.number));
+                counter++;
+                state=action.number;
+            }
+            else if(action.type.equals("reduce")){
+                Rule rule=grammar.rules.get(action.number);
+                for(int i=0;i<rule.symbols.size();i++){
+                    stack.pop();
+                }
+                state=stack.peek().state;
+                Action action2=table.get(state).get(rule.result);
+                stack.push(new StackElement(rule.result, action2.number));
+                state=action2.number;
+            }
+            else if(action.type.equals("accept")){
+                    break;
+            }
+        }
+
+    }
+
+    private static List<String> readSentences(String sentenceURL) throws FileNotFoundException {
+        File inputFile = new File(sentenceURL);
+        Scanner reader = new Scanner(inputFile);
+
+        List<String> sentences=new ArrayList<>();
+
+        while (reader.hasNextLine()) {
+            String line = reader.nextLine();
+            sentences.add(line + "$");
+        }
+        return sentences;
     }
 
     private static List<HashMap<String,Action>> generateTable(Diagram diagram, List<Reducer> reducers, Grammar grammar) {
@@ -63,6 +123,8 @@ public class Main {
         }
         return reducers;
     }
+
+
 
 
 }
