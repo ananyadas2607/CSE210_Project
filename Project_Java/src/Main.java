@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.sql.SQLOutput;
 import java.util.*;
 
 public class Main {
@@ -25,7 +26,7 @@ public class Main {
         long end = System.currentTimeMillis();
 
         //Output table and time elapsed
-        //printTable(table);
+        printTable(table, grammar);
 
         System.out.println("Time elapsed: " + (end-start)/1000.0);
 
@@ -51,6 +52,8 @@ public class Main {
 
 
     }
+
+
 
     private static void parseSentence(List<HashMap<String, Action>> table, String sentence, Grammar grammar){
         int state = 0;
@@ -121,6 +124,64 @@ public class Main {
         }
         return table;
     }
+
+    private static void printTable(List<HashMap<String,Action>> table, Grammar grammar) {
+        StringBuilder header= new StringBuilder("   ");
+        for(String terminal : grammar.terminals){
+            header.append(terminal).append("  ");
+        }
+
+        for(String nonTerminal : grammar.nonTerminals){
+            header.append(nonTerminal).append("  ");
+        }
+
+        System.out.println(header);
+
+
+        for (int i = 0; i < table.size(); i++) {
+
+            StringBuilder row = new StringBuilder();
+            row.append(i);
+            if(i<10){
+                row.append("  ");
+            }else{
+                row.append(" ");
+            }
+            for(String terminal : grammar.terminals){
+                Action action=table.get(i).get(terminal);
+                if(action==null){
+                    row.append("   ");
+                }
+                else{
+                    switch (action.type){
+                        case "shift":
+                            row.append("s").append(action.number).append(" ");
+                            break;
+                        case "reduce":
+                            row.append("r").append(action.number).append(" ");
+                            break;
+                        case "accept":
+                            row.append("a" + "  ");
+                            break;
+                    }
+                }
+            }
+            for(String nonTerminal : grammar.nonTerminals){
+                Action action=table.get(i).get(nonTerminal);
+                if(action==null){
+                    row.append("   ");
+                }
+                else{
+                    row.append("g").append(action.number).append(" ");
+                }
+
+            }
+            System.out.println(row);
+
+            }
+        }
+
+
 
 
     private static List<Reducer> generateReducers(Diagram diagram, Grammar grammar) {
