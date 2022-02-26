@@ -17,13 +17,13 @@ public class Main {
         //Table construction
         List<HashMap<String, Action>> table = constructTable(grammar);
 
-        //Output table and time elapsed
+        //Output table
         printTable(table, grammar);
 
         //Parse Sentences
         List<ParserTree> parserTrees = parseSentences(table, grammar, sentences);
 
-        //Output parsed sentences and time elapsed
+        //Output parsed sentences
         int counter = 1;
         for(ParserTree tree:parserTrees) {
             if (tree == null) {
