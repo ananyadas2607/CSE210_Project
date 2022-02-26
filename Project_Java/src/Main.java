@@ -13,6 +13,7 @@ public class Main {
         //Read the grammar from the file
         Grammar grammar = new Grammar(inputURL);
 
+        long start = System.currentTimeMillis();
         //State Diagram construction
         Diagram diagram= new Diagram(grammar);
 
@@ -21,16 +22,27 @@ public class Main {
 
         //Generate Table
         List<HashMap<String, Action>> table=generateTable(diagram, reducers, grammar);
+        long end = System.currentTimeMillis();
 
         //Output table and time elapsed
+        //printTable(table);
+
+        System.out.println("Time elapsed: " + (end-start)/1000.0);
 
         //Read sentences from file
         List<String> sentences= readSentences(sentenceURL);
 
         //Parse sentences
+        start = System.currentTimeMillis();
         for(String sentence:sentences){
             parseSentence(table, sentence, grammar);
         }
+        end = System.currentTimeMillis();
+
+        //Output parsed sentences and time elapsed
+        System.out.println("Time elapsed: " + (end-start)/1000.0);
+
+
 
 
 
