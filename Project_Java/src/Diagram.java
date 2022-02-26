@@ -30,8 +30,9 @@ public class Diagram {
                             if (equalStates(s,J)) {
                                 boolean edgePresent= false;
                                 for(Edge e:E){
-                                    if(e.start==I.id && e.end==s.id){
-                                        edgePresent=true;
+                                    if (e.start == I.id && e.end == s.id) {
+                                        edgePresent = true;
+                                        break;
                                     }
                                 }
                                 if(!edgePresent) {

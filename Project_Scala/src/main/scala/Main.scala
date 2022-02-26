@@ -1,3 +1,4 @@
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
@@ -19,16 +20,16 @@ object Main {
     val table = constructTable(grammar)
 
     //Output table
-    printTable(table, grammar)
+    //printTable(table, grammar)
 
     //Parse Sentences
-    val parserTrees = parseSentences(table, grammar, sentences)
+    //val parserTrees = parseSentences(table, grammar, sentences)
 
     //Output parsed sentences
     var counter = 1
-    parserTrees.foreach(tree => {
-      
-    })
+    //parserTrees.foreach(tree => {
+
+    //})
 
     //Time measurements
 
@@ -44,5 +45,18 @@ object Main {
       sentences +: (line+"$")
     }
     return sentences.toList
+  }
+
+  //def constructTable(grammar: Grammar): List[mutable.HashMap[String, Action]] = {
+  def constructTable(grammar: Grammar): Unit = {
+    //State Diagram construction
+    val diagram= new Diagram(null, null);
+    diagram.generate(grammar);
+
+    //Get the Reduce Set
+    //val reducers=generateReducers(diagram, grammar);
+
+    //Generate Table
+    //return generateTable(diagram, reducers, grammar);
   }
 }
