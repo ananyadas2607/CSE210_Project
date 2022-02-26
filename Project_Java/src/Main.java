@@ -1,45 +1,27 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.sql.SQLOutput;
 import java.util.*;
 
 public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
-        //String inputURL = args[0];
-        String inputURL = "/Users/Daniel Paul/Documents/GitHub/CSE210_Project/Grammars/Grammar_1.txt";
-
-        String sentenceURL="/Users/Daniel Paul/Documents/GitHub/CSE210_Project/Grammars/Sentences/Grammar_1.txt";
-
+        String grammarName = args[0];
+        String inputURL = "../../../../Grammars/"+grammarName+".txt";
+        String sentenceURL="../../../../Grammars/Sentences/"+grammarName+".txt";
         //Read the grammar from the file
         Grammar grammar = new Grammar(inputURL);
 
-        long start = System.currentTimeMillis();
-        //State Diagram construction
-        Diagram diagram= new Diagram(grammar);
+        //Read sentences from file
+        List<String> sentences = readSentences(sentenceURL);
 
-        //Get the Reduce Set
-        List<Reducer> reducers=generateReducers(diagram, grammar);
-
-        //Generate Table
-        List<HashMap<String, Action>> table=generateTable(diagram, reducers, grammar);
-        long end = System.currentTimeMillis();
+        //Table construction
+        List<HashMap<String, Action>> table = constructTable(grammar);
 
         //Output table and time elapsed
         printTable(table, grammar);
 
-        System.out.println("Time elapsed: " + (end-start)/1000.0);
-
-        //Read sentences from file
-        List<String> sentences= readSentences(sentenceURL);
-
-        //Parse sentences
-        start = System.currentTimeMillis();
-        List<ParserTree> parserTrees = new ArrayList<>();
-        for(String sentence:sentences){
-             parserTrees.add(parseSentence(table, sentence, grammar));
-        }
-        end = System.currentTimeMillis();
+        //Parse Sentences
+        List<ParserTree> parserTrees = parseSentences(table, grammar, sentences);
 
         //Output parsed sentences and time elapsed
         int counter = 1;
@@ -54,8 +36,40 @@ public class Main {
             }
             counter++;
         }
-        System.out.println("Time elapsed: " + (end-start)/1000.0);
 
+        //Time measurements
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 1000; i++) {
+            constructTable(grammar);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("Time to generate table (x1000): "+(end-start)/1000.0);
+        start = System.currentTimeMillis();
+        for (int i = 0; i < 1000; i++) {
+            parseSentences(table, grammar, sentences);
+        }
+        end = System.currentTimeMillis();
+        System.out.println("Time to parse sentences (x1000): "+(end-start)/1000.0);
+
+    }
+
+    private static List<ParserTree> parseSentences(List<HashMap<String,Action>> table, Grammar grammar, List<String> sentences) {
+        List<ParserTree> parserTrees = new ArrayList<>();
+        for(String sentence:sentences){
+            parserTrees.add(parseSentence(table, sentence, grammar));
+        }
+        return parserTrees;
+    }
+
+    private static List<HashMap<String,Action>> constructTable(Grammar grammar) {
+        //State Diagram construction
+        Diagram diagram= new Diagram(grammar);
+
+        //Get the Reduce Set
+        List<Reducer> reducers=generateReducers(diagram, grammar);
+
+        //Generate Table
+        return generateTable(diagram, reducers, grammar);
     }
 
     private static ParserTree parseSentence(List<HashMap<String, Action>> table, String sentence, Grammar grammar){
@@ -65,7 +79,6 @@ public class Main {
         String[] input = sentence.split("");
         int counter = 0;
 
-        label:
         while(counter < input.length) {
             Action action = table.get(state).get(input[counter]);
             if (action == null) {
@@ -140,13 +153,13 @@ public class Main {
     }
 
     private static void printTable(List<HashMap<String,Action>> table, Grammar grammar) {
-        StringBuilder header= new StringBuilder("   ");
+        StringBuilder header= new StringBuilder("    ");
         for(String terminal : grammar.terminals){
-            header.append(terminal).append("  ");
+            header.append(terminal).append("   ");
         }
 
         for(String nonTerminal : grammar.nonTerminals){
-            header.append(nonTerminal).append("  ");
+            header.append(nonTerminal).append("   ");
         }
 
         System.out.println(header);
@@ -157,25 +170,25 @@ public class Main {
             StringBuilder row = new StringBuilder();
             row.append(i);
             if(i<10){
-                row.append("  ");
+                row.append("   ");
             }else{
-                row.append(" ");
+                row.append("  ");
             }
             for(String terminal : grammar.terminals){
                 Action action=table.get(i).get(terminal);
                 if(action==null){
-                    row.append("   ");
+                    row.append("    ");
                 }
                 else{
                     switch (action.type){
                         case "shift":
-                            row.append("s").append(action.number).append(" ");
+                            row.append("s").append(printNumber(action.number));
                             break;
                         case "reduce":
-                            row.append("r").append(action.number).append(" ");
+                            row.append("r").append(printNumber(action.number));
                             break;
                         case "accept":
-                            row.append("a" + "  ");
+                            row.append("a" + "   ");
                             break;
                     }
                 }
@@ -183,18 +196,24 @@ public class Main {
             for(String nonTerminal : grammar.nonTerminals){
                 Action action=table.get(i).get(nonTerminal);
                 if(action==null){
-                    row.append("   ");
+                    row.append("    ");
                 }
                 else{
-                    row.append("g").append(action.number).append(" ");
+                    row.append("g").append(printNumber(action.number));
                 }
 
             }
             System.out.println(row);
 
-            }
         }
-
+    }
+    private static String printNumber(int number){
+        if (number < 10) {
+            return number+"  ";
+        } else {
+            return number+" ";
+        }
+    }
 
 
 

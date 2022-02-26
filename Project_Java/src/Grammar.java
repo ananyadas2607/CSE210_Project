@@ -16,7 +16,6 @@ public class Grammar {
         Scanner reader = new Scanner(inputFile);
 
         this.nonTerminals = new ArrayList<>();
-        this.nonTerminals.add("R");
         this.nonTerminals.addAll(Arrays.asList(reader.nextLine().split(" ")));
 
         this.terminals = new ArrayList<>();
@@ -26,7 +25,7 @@ public class Grammar {
         this.rules = new ArrayList<>();
         while (reader.hasNextLine()) {
             String line = reader.nextLine();
-            Rule rule = new Rule(line.split("→")[0], Arrays.asList(line.split("→")[1].split("")), rules.size());
+            Rule rule = new Rule(line.split("->")[0], Arrays.asList(line.split("->")[1].split("")), rules.size());
             this.rules.add(rule);
         }
         reader.close();
