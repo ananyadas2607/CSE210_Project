@@ -7,16 +7,16 @@ import scala.io.Source
 object Main {
 
   def main(args: Array[String]) = {
-    //val grammarName: String = args(0)
-    //val inputURL: String = "../../../../Grammars/" + grammarName + ".txt"
-    //val sentenceURL: String = "../../../../Grammars/Sentences/" + grammarName + ".txt"
+    val grammarName: String = args(0)
+    val inputURL: String = "../../../../Grammars/" + grammarName + ".txt"
+    val sentenceURL: String = "../../../../Grammars/Sentences/" + grammarName + ".txt"
 
     //Read the grammar from the file
     val grammar: Grammar = new Grammar(null, null, null)
-    grammar.readGrammar("C:\\Users\\Daniel Paul\\Documents\\GitHub\\CSE210_Project\\Grammars\\Grammar_1.txt")
+    grammar.readGrammar(inputURL)
 
     //Read the sentences from the file
-    val sentences = readSentences("C:\\Users\\Daniel Paul\\Documents\\GitHub\\CSE210_Project\\Grammars\\Sentences\\Grammar_1.txt")
+    val sentences = readSentences(sentenceURL)
 
     //Table construction
     val table = constructTable(grammar)
