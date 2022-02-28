@@ -1,171 +1,199 @@
-def generateReducers(diagram, grammar):
-    reducers=[]
+import sys
+import time
+
+from Action import Action
+from Diagram import Diagram
+from Element import Element
+from Grammar import Grammar
+from Node import Node
+from Reducer import Reducer
+from Stackelement import Stackelement
+
+
+def generateReducers(diagram):
+    reducers = []
     for state in diagram.T:
         for positionRule in state.rules:
             if positionRule.isLast():
-                reducers.append(state.id, positionRule.rule.number)
+                reducers.append(Reducer(state.id, positionRule.rule.number))
 
     return reducers
 
 
 def readSentences(sentenceURL):
-    f=open(sentenceURL,"r")
-    sentences=[]
+    f = open(sentenceURL, "r")
+    sentences = []
 
-    while f.readline():
-        sentences.add(line + "$")
+    for line in f:
+        sentences.append(line.strip("\n") + "$")
     return sentences
 
 
 def generateTable(diagram, reducers, grammar):
-    table=[]
-    i=0
-    while i<diagram.T.len():
-        table.append(dictionary)
-    i+=1
+    table = []
+    for i in range(len(diagram.T)):
+        table.append({})
 
     for edge in diagram.E:
         if edge.symbol in grammar.nonTerminals:
-            table(edge.start).put(edge.symbol, Action("goto", edge.end))
+            table[edge.start][edge.symbol] = Action("goto", edge.end)
         else:
-            table(edge.start).put(edge.symbol, Action("shift", e.end))
-    for reducers in Reducer:
+            table[edge.start][edge.symbol] = Action("shift", edge.end)
+    for r in reducers:
         for terminal in grammar.terminals:
-            table.get(reducers.state).put(terminal, Action("reduce", r.ruleNum))
+            table[r.state][terminal] = Action("reduce", r.ruleNum)
     for state in diagram.T:
-        if not state.rules[0].isLast() and state.rules[0].getNextSymbol().equals("$"):
-            table.get(state.id).put("$", Action("accept", 0))
+        if (not state.rules[0].isLast()) and state.rules[0].getNextSymbol() == "$":
+            table[state.id]["$"] = Action("accept", 0)
 
     return table
 
 
-class Main:
-    def __init__(self):
-        pass
+def printNumber(number):
+    if number < 10:
+        return str(number) + "  "
+    return str(number) + " "
 
-    def printTable(self, table, grammar):
-        header = "   "
+
+def printTable(table, grammar):
+    header = "    "
+    for terminal in grammar.terminals:
+        header += terminal + "   "
+    for nonTerminal in grammar.nonTerminals:
+        header += nonTerminal + "   "
+    print(header)
+
+    for i in range(len(table)):
+        row = ""
+        row += str(i)
+        if i < 10:
+            row += "   "
+        else:
+            row += "  "
         for terminal in grammar.terminals:
-            header.append(terminal).append("  ")
-        for nonTerminal in grammar.nonTerminals:
-            header.append(nonTerminal).append("  ")
-        print(header)
-        i=0
-        while i < table.len() :
-            row=""
-            row.append(i)
-            if i < 10 :
-                row.append("  ")
+
+            if terminal not in table[i]:
+                row += "    "
             else:
-                row.append("  ")
-            for terminal in grammar.terminals :
-                action= table[i][terminal]
-                if action is None:
-                    row.append("   ")
-                else:
-                    if action.type == "shift":
-                        row.append("s").append(action.number).append(" ")
-                        break
-                    elif action.type == "reduce":
-                        row.append("r").append(action.number).append(" ")
-                        break
-                    elif action.type == "accept":
-                        row.append("a"+" ")
-                        break
-            for nonTerminal in grammar.nonTerminals:
-                action=table[i][nonTerminal]
-                if action is None:
-                    row.append("   ")
-                else:
-                    row.append("g").append(action.number).append(" ")
+                action = table[i][terminal]
+                if action.type == "shift":
+                    row += "s" + printNumber(action.number)
+                elif action.type == "reduce":
+                    row += "r" + printNumber(action.number)
+                elif action.type == "accept":
+                    row += "a   "
+        for nonTerminal in grammar.nonTerminals:
+            if nonTerminal not in table[i]:
+                row += "    "
+            else:
+                action = table[i][nonTerminal]
+                row += "g" + printNumber(action.number)
 
-            print(row)
+        print(row)
 
-    def parseSentence(self, table, sentence, grammar):
-        state = 0
-        stack.push("", 0, None)
-        input = sentence.split("")
-        counter = 0
-        while counter < input.size() :
-            action = table.get(state).get(input[counter])
-            if action is None:
-                return None
-            elif action.type is "shift":
-                stack.push(Stackelement[input[counter], action.number, Element[input[counter]], counter])
-                counter +=1
+
+def parseSentence(table, sentence, grammar):
+    state = 0
+    stack = [Stackelement("", 0, None)]
+    inputS = list(sentence)
+    counter = 0
+    while counter < len(inputS):
+        if inputS[counter] not in table[state]:
+            return None
+        else:
+            action = table[state][inputS[counter]]
+            if action.type == "shift":
+                stack.append(Stackelement(inputS[counter], action.number, Element(inputS[counter], counter)))
+                counter += 1
                 state = action.number
-                break
-            elif action.type is "reduce":
+            elif action.type == "reduce":
                 rule = grammar.rules[action.number]
-                children=[]
-                end = stack.peek().tree.end
+                children = []
+                end = stack[-1].tree.end
 
-                i=0
-                while i < rule.symbols.size() :
+                for i in range(len(rule.symbols)):
                     stackElement = stack.pop()
                     children.append(stackElement.tree)
-                i+=1
 
-                if stack.peek().tree is None:
+                if stack[-1].tree is None:
                     start = 0
                 else:
-                    return stack.peek().tree.end
+                    start = stack[-1].tree.end
 
-                reverse(children)
-                state = stack.peek().state
-                action2 = table.get(state).get(rule.result)
+                children.reverse()
+                state = stack[-1].state
+                action2 = table[state][rule.result]
                 newNode = Node(rule.result, children, start, end)
-                stack.push(Stackelement(rule.result, action2.number, newNode))
+                stack.append(Stackelement(rule.result, action2.number, newNode))
                 state = action2.number
-                break
-            elif action.type is "accept":
+
+            elif action.type == "accept":
                 return stack.pop().tree
-                break
-        return None
+    return None
 
-    def main(self):
-        #String inputURL = args[0]
-        inputURL = "/Users/ananya/Documents/GitHub/CSE210_Project/Grammars/Grammar_1.txt"
-        sentenceURL = "/Users/ananya/Documents/GitHub/CSE210_Project/Grammars/Sentences/Grammar_1.txt"
 
-        #Read the grammar from the file
-        grammar = Grammar(inputURL)
+def constructTable(grammar):
+    # State diagram construction
+    diagram = Diagram(grammar)
 
-        start = time.time() * 1000
+    # Get the reduce set
+    reducers = generateReducers(diagram)
 
-        #State diagram construction
-        diagram = Diagram(grammar)
+    # Generate table
+    return generateTable(diagram, reducers, grammar)
 
-        #Get the reduce set
-        reducers = generateReducers(diagram, grammar)
 
-        #Generate table
-        table = generateTable(diagram, reducers, grammar)
+def parseSentences(table, grammar, sentences):
+    parserTrees = []
+    for sentence in sentences:
+        parserTrees.append(parseSentence(table, sentence, grammar))
+    return parserTrees
 
-        #Output table and time elapsed
-        printTable(table, grammar)
 
-        #Read sentences from file
-        sentences = readSentences(sentenceURL)
+def main():
+    grammarName = sys.argv[1]
+    inputURL = "../../Grammars/"+grammarName+".txt"
+    sentenceURL = "../../Grammars/Sentences/"+grammarName+".txt"
 
-        #Parse sentences
-        start = time.time() * 1000
-        parserTrees = []
-        for sentence in sentences :
-            parserTrees.add(parseSentence(table, sentence, grammar))
+    # Read the grammar from the file
+    grammar = Grammar(inputURL)
 
-        end = time.time() * 1000
+    # Read sentences from file
+    sentences = readSentences(sentenceURL)
 
-        #Output parsed sentences and time elapsed
-        counter = 1
-        for tree in parserTrees :
-            if tree == null :
-                print("Sentence " + counter + ": Not valid")
-            else :
-                print("Sentence " + counter + ": Valid")
-                tree.print(string, "", "")
-                print(string)
-            counter+=1
+    # Construct table
+    table = constructTable(grammar)
 
-            print("Time elapsed: " + (end-start)/1000.0)
-            
+    # Output table
+    printTable(table, grammar)
+
+    # Parse sentences
+    parserTrees = parseSentences(table, grammar, sentences)
+
+    # Output parsed sentences
+    counter = 1
+    for tree in parserTrees:
+        if tree is None:
+            print("Sentence " + str(counter) + ": Not valid")
+        else:
+            print("Sentence " + str(counter) + ": Valid")
+            tree.print1("", "")
+        counter += 1
+
+    # Time measurements
+
+    start = time.time_ns()
+    for i in range(1000):
+        constructTable(grammar)
+    end = time.time_ns()
+    print("Time to generate table (x1000): " + str((end - start) / pow(10, 9)))
+
+    start = time.time_ns()
+    for i in range(1000):
+        parseSentences(table, grammar, sentences)
+    end = time.time_ns()
+    print("Time to parse sentences (x1000): " + str((end - start) / pow(10, 9)))
+
+
+if __name__ == "__main__":
+    main()
