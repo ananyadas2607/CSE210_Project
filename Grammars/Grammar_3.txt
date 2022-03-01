@@ -1,0 +1,7 @@
+E B
+| t f
+R->E$
+E->E|B
+E->B
+B->t
+B->f
